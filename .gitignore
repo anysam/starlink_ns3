@@ -1,0 +1,9 @@
+# Literal filenames #
+#####################
+*/__pycache__/
+
+# Files created during building #
+#################################
+.lock-waf_linux_build
+.waf3-2.0.18-ff4ae9f5cc05353d3dc3aeff8854ae69/
+/build/
