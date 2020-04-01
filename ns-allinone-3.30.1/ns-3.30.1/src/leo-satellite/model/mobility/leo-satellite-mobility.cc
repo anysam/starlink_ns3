@@ -77,13 +77,6 @@ LeoSatelliteMobilityModel::LeoSatelliteMobilityModel()
 {
   currentNode++;
   m_current = currentNode;
- 
-  // Determine speed of satellite from altitude
-  double G = 6.673e-11; // gravitational constant [Nm^2/kg^2]
-  double earthMass = 5.972e24; // mass of Earth [kg]
-  double altitude = m_altitude;
-
-  m_speed = std::sqrt(G*earthMass/(earthRadius + altitude));
 }
 
 /* To be called after MobilityModel object is created to set position.
@@ -96,13 +89,23 @@ LeoSatelliteMobilityModel::LeoSatelliteMobilityModel()
    The first node in the next plane is set by setting latitude = 90 and incrementing the longitude
    ...
    Node N is closest to latitude = -90, longitude = 180
+
+   The latitude edges of +90 and -90 are populated
+   The longitude edge of -180 is populated (180 is not populated as it is equivalent to -180)
  */
 void 
 LeoSatelliteMobilityModel::DoSetPosition (const Vector &position)
 {
+  // Determine speed of satellite from altitude
+  double G = 6.673e-11; // gravitational constant [Nm^2/kg^2]
+  double earthMass = 5.972e24; // mass of Earth [kg]
+  double altitude = m_altitude;
+
+  m_speed = std::sqrt(G*earthMass/(earthRadius + altitude));
+
   // Set latitude and longitude of satellite from number of orbital planes and number of satellites per orbital plane
-  m_latitude = 90 - 180/(m_nPerPlane + 1) - 180/(m_nPerPlane + 1)*fmod(m_current - 1, m_nPerPlane);
-  m_longitude = -180 + 360/(m_numPlanes*2 + 1) + 360/(m_numPlanes*2 + 1)*floor((m_current - 1)/m_nPerPlane);
+  m_latitude = 90 - 180/(m_nPerPlane - 1)*fmod(m_current - 1, m_nPerPlane);
+  m_longitude = -180 + 360/(m_numPlanes*2)*floor((m_current - 1)/m_nPerPlane);
 
   // Set direction based on which orbital plane satellite belongs to
   uint32_t plane = ceil(m_current/(m_numPlanes*2));

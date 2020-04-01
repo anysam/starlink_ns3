@@ -12,7 +12,6 @@ def build(bld):
         'model/leo-satellite-config.cc',
         'model/leo-channel.cc',
         'model/mobility/leo-satellite-mobility.cc',
-        'model/mobility/orbit-position-allocator.cc',
         'helper/leo-satellite-helper.cc',
         
         ]
@@ -28,7 +27,6 @@ def build(bld):
         'model/leo-satellite-config.h',
         'model/leo-channel.h',
         'model/mobility/leo-satellite-mobility.h',
-        'model/mobility/orbit-position-allocator.h',
         'helper/leo-satellite-helper.h',
         ]
 

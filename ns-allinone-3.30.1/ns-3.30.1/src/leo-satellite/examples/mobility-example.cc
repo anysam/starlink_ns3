@@ -45,9 +45,6 @@ main (int argc, char *argv[])
   c.Create (100);
 
   MobilityHelper mobility;
-  /* mobility.SetPositionAllocator ("ns3::OrbitPositionAllocator",
-                                 "NPerPlane", StringValue ("10"),
-                                 "NumberofPlanes", StringValue ("10")); */
 
   mobility.SetMobilityModel ("ns3::LeoSatelliteMobilityModel",
                              "NPerPlane", IntegerValue (10),
