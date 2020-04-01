@@ -35,7 +35,7 @@
 #include "ns3/boolean.h"
 #include "ns3/string.h"
 #include "ns3/applications-module.h"
-#include "ns3/satellite-module.h"
+#include "ns3/sns3-satellite-module.h"
 #include "ns3/traffic-module.h"
 
 using namespace ns3;
