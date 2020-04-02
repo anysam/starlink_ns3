@@ -104,7 +104,19 @@ LeoSatelliteMobilityModel::DoSetPosition (const Vector &position)
   m_speed = std::sqrt(G*earthMass/(earthRadius + altitude));
 
   // Set latitude and longitude of satellite from number of orbital planes and number of satellites per orbital plane
-  m_latitude = 90 - 180/((m_nPerPlane - 2)/2)*fmod(m_current - 1, m_nPerPlane/2);
+  // First satellite in plane will have a longitude that is a half-step down from 90 degrees 
+  if (m_current == 1)
+  {
+    m_latitude = 90 - 180/(m_nPerPlane/2)/2;
+  }
+  else if ((fmod(m_current - 1, m_nPerPlane/2) == 0) && (m_current > m_nPerPlane))
+  {
+    m_latitude = 90 - 180/(m_nPerPlane/2)/2;
+  }
+  else
+  {
+     m_latitude = 90 - 180/(m_nPerPlane/2)/2 - 180/(m_nPerPlane/2)*fmod(m_current - 1, m_nPerPlane/2);
+  }
   m_longitude = -180 + 360/(m_numPlanes*2)*floor((m_current - 1)/(m_nPerPlane/2));
 
   // Set direction based on which orbital plane satellite belongs to
@@ -137,14 +149,24 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
       {
          degreeDisplacement = degreeDisplacement - (90 - latitude); // We've accounted for the degrees taken to get to north pole
          latitude = 90;
-         longitude = (-1)*longitude;
+         if (longitude == -180)
+           longitude = 0;
+         else if (longitude == 0)
+           longitude = -180;
+         else
+           longitude = (-1)*longitude;
          direction = 0;
       }
       if ((latitude - degreeDisplacement) < -90)
       {
          degreeDisplacement = degreeDisplacement - 180; // We've accounted for the degrees taken to get to south pole
          latitude = -90;
-         longitude = (-1)*longitude;
+         if (longitude == -180)
+           longitude = 0;
+         else if (longitude == 0)
+           longitude = -180;
+         else
+           longitude = (-1)*longitude;
          direction = 1;
       }
 
@@ -157,14 +179,24 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
       {
          degreeDisplacement = degreeDisplacement - (latitude - (-90)); // We've accounted for the degrees taken to get to south pole
          latitude = -90;
-         longitude = (-1)*longitude;
+         if (longitude == -180)
+           longitude = 0;
+         else if (longitude == 0)
+           longitude = -180;
+         else
+           longitude = (-1)*longitude;
          direction = 1;
       }
       if ((latitude + degreeDisplacement) > 90)
       {
          degreeDisplacement = degreeDisplacement - 180; // We've accounted for the degrees taken to get to north pole
          latitude = 90;
-         longitude = (-1)*longitude;
+         if (longitude == -180)
+           longitude = 0;
+         else if (longitude == 0)
+           longitude = -180;
+         else
+           longitude = (-1)*longitude;
          direction = 0;
       }
 

@@ -41,8 +41,8 @@ private:
   virtual Vector DoGetVelocity (void) const;
   friend double CalculateDistance (const Vector &a, const Vector &b);
   uint32_t m_current; // current node
-  double m_nPerPlane; // number of satellites per plane
-  double m_numPlanes; // number of planes
+  double m_nPerPlane; // number of satellites per plane -> m_nPerPlane/2 must be even number
+  double m_numPlanes; // number of planes -> must be even number
   mutable double m_time; // time when current m_latitude, m_longitude, and m_direction were set
   double m_altitude; // [km]
   // The following variables are calculated automatically given the above paramteres

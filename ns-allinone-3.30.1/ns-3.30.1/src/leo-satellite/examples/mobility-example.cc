@@ -47,7 +47,7 @@ main (int argc, char *argv[])
   MobilityHelper mobility;
 
   mobility.SetMobilityModel ("ns3::LeoSatelliteMobilityModel",
-                             "NPerPlane", IntegerValue (10),
+                             "NPerPlane", IntegerValue (12),
                              "NumberofPlanes", IntegerValue (5),
                              "Altitude", DoubleValue(2000.0),
                              "Time", DoubleValue(Simulator::Now().GetSeconds()));
