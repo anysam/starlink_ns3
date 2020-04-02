@@ -42,7 +42,7 @@ main (int argc, char *argv[])
   cmd.Parse (argc, argv);
 
   NodeContainer c = NodeContainer();
-  c.Create (100);
+  c.Create (50); // This needs to be equal NPerPlane*NumberofPlanes in mobility model for proper configuration
 
   MobilityHelper mobility;
 
@@ -96,6 +96,21 @@ main (int argc, char *argv[])
       Ptr<MobilityModel> position = object->GetObject<MobilityModel> ();
       PrintDistanceBetween(firstNodePosition, 1, position, neighbourNodeCount);
       neighbourNodeCount++;
+    }
+
+
+  // Running simulation for another 10 seconds
+  Simulator::Stop (Seconds (10));
+  
+  Simulator::Run ();
+
+  // Printing positions after simulator has run for 20s
+  for (NodeContainer::Iterator j = c.Begin ();
+       j != c.End (); ++j)
+    {
+      Ptr<Node> object = *j;
+      Ptr<MobilityModel> position = object->GetObject<MobilityModel> ();
+      PrintCurrentPosition(position);
     }
 
   Simulator::Destroy ();

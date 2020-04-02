@@ -104,8 +104,8 @@ LeoSatelliteMobilityModel::DoSetPosition (const Vector &position)
   m_speed = std::sqrt(G*earthMass/(earthRadius + altitude));
 
   // Set latitude and longitude of satellite from number of orbital planes and number of satellites per orbital plane
-  m_latitude = 90 - 180/(m_nPerPlane - 1)*fmod(m_current - 1, m_nPerPlane);
-  m_longitude = -180 + 360/(m_numPlanes*2)*floor((m_current - 1)/m_nPerPlane);
+  m_latitude = 90 - 180/((m_nPerPlane - 2)/2)*fmod(m_current - 1, m_nPerPlane/2);
+  m_longitude = -180 + 360/(m_numPlanes*2)*floor((m_current - 1)/(m_nPerPlane/2));
 
   // Set direction based on which orbital plane satellite belongs to
   uint32_t plane = ceil(m_current/(m_numPlanes*2));
@@ -214,7 +214,6 @@ LeoSatelliteMobilityModel::DoGetVelocity (void) const
   Vector null = Vector(0.0, 0.0, 0.0);
   return null;
 }
-
 
 } // namespace ns3
 
