@@ -101,7 +101,7 @@ LeoSatelliteMobilityModel::DoSetPosition (const Vector &position)
   double earthMass = 5.972e24; // mass of Earth [kg]
   double altitude = m_altitude;
 
-  m_speed = std::sqrt(G*earthMass/(earthRadius + altitude));
+  m_speed = std::sqrt(G*earthMass/(earthRadius*1000 + altitude*1000));
 
   // Set latitude and longitude of satellite from number of orbital planes and number of satellites per orbital plane
   // First satellite in plane will have a longitude that is a half-step down from 90 degrees 
@@ -230,7 +230,31 @@ CalculateDistance (const Vector &a, const Vector &b)
   double latitude1 = a.x*M_PI/180;
   double latitude2 = b.x*M_PI/180;
   double deltaLatitude = (b.x - a.x)*M_PI/180;
-  double deltaLongitude = (b.y - a.y)*M_PI/180;
+  double deltaLongitude;
+  if((b.y == -180 && a.y == -180) || (b.y == 0 && a.y == 0))
+  {
+    deltaLongitude = (a.y - b.y)*M_PI/180;
+  }
+  else if (b.y == -180)
+  {
+    deltaLongitude = std::min(std::abs(b.y - a.y), std::abs(0-a.y))*M_PI/180;
+  }
+  else if (a.y == -180)
+  {
+    deltaLongitude = std::min(std::abs(b.y - a.y), std::abs(b.y - 0))*M_PI/180;
+  }
+  else if (b.y == 0)
+  {
+     deltaLongitude = std::min(std::abs(b.y - a.y), std::abs(180 - a.y))*M_PI/180;
+  }
+  else if (a.y == 0)
+  {
+     deltaLongitude = std::min(std::abs(b.y - a.y), std::abs(b.y - 180))*M_PI/180;
+  }
+  else
+  {
+    deltaLongitude = (a.y - b.y)*M_PI/180;
+  }
 
   // Haversine formula
   double y = pow(sin(deltaLatitude/2), 2) + cos(latitude1)*cos(latitude2)*pow(sin(deltaLongitude/2), 2);
