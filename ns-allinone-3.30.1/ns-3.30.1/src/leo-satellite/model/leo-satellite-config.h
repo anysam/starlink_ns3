@@ -19,6 +19,7 @@
 #include <vector>
 #include "ns3/mobility-module.h"
 #include "ns3/csma-module.h"
+#include <cmath>
 
 namespace ns3 {
 
@@ -33,7 +34,8 @@ public:
 
   LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satellites_per_plane, double altitude);
 
-  virtual ~LeoSatelliteConfig () = 0;
+  virtual ~LeoSatelliteConfig ();
+  virtual TypeId GetInstanceTypeId (void) const;
   
   void UpdateLinks (); //update the intersatellite links
 private:
