@@ -12,6 +12,7 @@ def build(bld):
         'model/leo-satellite-config.cc',
         'model/leo-channel.cc',
         'model/mobility/leo-satellite-mobility.cc',
+        'model/mobility/ground-station-mobility.cc',
         'helper/leo-satellite-helper.cc',
         
         ]
@@ -27,6 +28,7 @@ def build(bld):
         'model/leo-satellite-config.h',
         'model/leo-channel.h',
         'model/mobility/leo-satellite-mobility.h',
+        'model/mobility/ground-station-mobility.h',
         'helper/leo-satellite-helper.h',
         ]
 

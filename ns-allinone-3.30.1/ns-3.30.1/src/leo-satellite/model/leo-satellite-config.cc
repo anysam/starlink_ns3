@@ -15,6 +15,8 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (LeoSatelliteConfig);
 NS_LOG_COMPONENT_DEFINE ("LeoSatelliteConfig");
 
+extern double CalculateDistanceGroundToSat (const Vector &a, const Vector &b);
+
 double speed_of_light = 299792458; //in m/s
 
 //typeid
@@ -163,7 +165,75 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
       this->inter_plane_channel_tracker.push_back(j);
     }
   }
-  //TODO: configure ground stations and channels
+
+  //setting up two ground stations for now
+  std::cout << "Setting up two ground stations" << std::endl;
+  ground_stations.Create(2);
+  //assign mobility model to ground stations
+  MobilityHelper groundMobility;
+  groundMobility.SetMobilityModel ("ns3::GroundStationMobilityModel",
+                             "NPerPlane", IntegerValue (num_satellites_per_plane),
+                             "NumberofPlanes", IntegerValue (num_planes));
+  groundMobility.Install(ground_stations);
+  for (int j = 0; j<2; j++)
+  {
+    Vector temp = ground_stations.Get(j)->GetObject<MobilityModel> ()->GetPosition();
+    std::cout << Simulator::Now().GetSeconds() << ": ground station # " << j << ": x = " << temp.x << ", y = " << temp.y << std::endl;
+  }
+  //setting up links between ground stations and their closest satellites
+  std::cout<<"Setting links between ground stations and satellites"<<std::endl;
+  for (uint32_t i=0; i<2; i++)
+  {
+    Vector gndPos = ground_stations.Get(i)->GetObject<MobilityModel> ()->GetPosition();
+    uint32_t closestAdjSat = 0;
+    uint32_t closestAdjSatDist = 0;
+    uint32_t planeIndex;
+    if (i == 0)
+      planeIndex = 0;
+    else
+      planeIndex = floor(5*num_satellites_per_plane/7);
+    //find closest adjacent satellite for ground station
+    for (uint32_t j=0; j<this->num_satellites_per_plane; j++)
+    {
+      Vector pos = this->plane[planeIndex].Get(j)->GetObject<MobilityModel>()->GetPosition();
+      double temp_dist = CalculateDistanceGroundToSat(gndPos,pos);
+      if((temp_dist < closestAdjSatDist) || (j==0))
+      {
+        closestAdjSatDist = temp_dist;
+        closestAdjSat = j;
+      }
+    }
+    double delay = (closestAdjSatDist*1000)/speed_of_light;
+    CsmaHelper ground_station_link_helper;
+    ground_station_link_helper.SetChannelAttribute("DataRate", StringValue ("5Mbps")); //TODO: update values
+    ground_station_link_helper.SetChannelAttribute("Delay", TimeValue(Seconds(delay)));
+
+    std::cout<<"Channel open between ground station " << i << " and plane " << planeIndex << " satellite "<<closestAdjSat<<" with distance "<<closestAdjSatDist<< "km and delay of "<<delay<<" seconds"<<std::endl;
+
+    NodeContainer temp_node_container;
+    temp_node_container.Add(ground_stations.Get(i));
+    temp_node_container.Add(this->plane[planeIndex]);
+    NetDeviceContainer temp_netdevice_container;
+    temp_netdevice_container = ground_station_link_helper.Install(temp_node_container);
+    Ptr<CsmaChannel> csma_channel;
+    Ptr<Channel> channel;
+    channel = temp_netdevice_container.Get(0)->GetChannel();
+    csma_channel = channel->GetObject<CsmaChannel> ();
+
+    for (uint32_t k=0; k<num_satellites_per_plane; k++)
+    {
+      if (closestAdjSat != k)
+      {
+        csma_channel->Detach(temp_netdevice_container.Get(k+1)->GetObject<CsmaNetDevice> ());
+      }
+    }
+        
+    this->ground_station_devices.push_back(temp_netdevice_container);
+    this->ground_station_channels.push_back(csma_channel);
+    this->ground_station_channel_tracker.push_back(closestAdjSat);
+  }
+
+  //TODO: configure ground stations and channels -- code needs to be reviewed
   //TODO: set IP addresses
 }
 
@@ -173,7 +243,7 @@ void LeoSatelliteConfig::UpdateLinks()
   for (uint32_t i=0; i<this->num_planes; i++)
   {
     Vector refSatPos;
-    uint32_t refSat;
+    uint32_t refSat = 0;
     //find reference satellite (closest to equator)
     for (uint32_t j=0; j<this->num_satellites_per_plane; j++)
     {
@@ -186,7 +256,7 @@ void LeoSatelliteConfig::UpdateLinks()
     }
 
     //find the closest adjacent satellite to the reference satellite
-    uint32_t closestAdjSat;
+    uint32_t closestAdjSat = 0;
     double closestAdjSatDist = 0;
     for (uint32_t j=0; j<this->num_satellites_per_plane; j++)
     {
@@ -233,8 +303,48 @@ void LeoSatelliteConfig::UpdateLinks()
       }
     }
   }
-}
 
+  //updating links between ground stations and their closest satellites
+  for (uint32_t i=0; i<2; i++)
+  {
+    Vector gndPos = ground_stations.Get(i)->GetObject<MobilityModel> ()->GetPosition();
+    uint32_t closestAdjSat = 0;
+    uint32_t closestAdjSatDist = 0;
+    uint32_t planeIndex;
+    if (i == 0)
+      planeIndex = 0;
+    else
+      planeIndex = floor(5*num_satellites_per_plane/7);
+    //find closest adjacent satellite for ground station
+    for (uint32_t j=0; j<this->num_satellites_per_plane; j++)
+    {
+      Vector pos = this->plane[planeIndex].Get(j)->GetObject<MobilityModel>()->GetPosition();
+      double temp_dist = CalculateDistanceGroundToSat(gndPos,pos);
+      if((temp_dist < closestAdjSatDist) || (j==0))
+      {
+        closestAdjSatDist = temp_dist;
+        closestAdjSat = j;
+      }
+    }
+
+    uint32_t currAdjNodeID = this->ground_station_channel_tracker[i];
+    if(currAdjNodeID == closestAdjSat)
+    {
+      double new_delay = (closestAdjSatDist*1000)/speed_of_light;
+      this->ground_station_channels[i]->SetAttribute("Delay", TimeValue(Seconds(new_delay)));
+      std::cout<<"Channel updated between ground station "<<i<<" and plane "<<planeIndex<<" satellite "<<closestAdjSat<< " with distance "<<closestAdjSatDist<< "km and delay of "<<new_delay<<" seconds"<<std::endl;
+      }
+      else
+      {
+        this->ground_station_channels[i]->Detach(this->ground_station_devices[i].Get(currAdjNodeID+1)->GetObject<CsmaNetDevice> ());
+        this->ground_station_channels[i]->Reattach(this->ground_station_devices[i].Get(closestAdjSat+1)->GetObject<CsmaNetDevice> ());
+        this->ground_station_channel_tracker[i] = closestAdjSat;
+        double new_delay = (closestAdjSat*1000)/speed_of_light;
+        this->ground_station_channels[i]->SetAttribute("Delay", TimeValue(Seconds(new_delay)));
+        std::cout<<"New channel between ground station "<<i<<"and plane "<<planeIndex<<" satellite "<<closestAdjSat<< " with distance "<<closestAdjSatDist<< "km and delay of "<<new_delay<<" seconds"<<std::endl;
+      }
+  }
+}
 
 }
 

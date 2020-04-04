@@ -16,6 +16,7 @@
 #include "ns3/core-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/leo-satellite-mobility.h"
+#include "ns3/ground-station-mobility.h"
 #include <vector>
 #include "ns3/mobility-module.h"
 #include "ns3/csma-module.h"
@@ -48,6 +49,10 @@ private:
   std::vector<NetDeviceContainer> inter_plane_devices; //the size of this vector should be the number of nodes after configured
   std::vector<Ptr<CsmaChannel>> inter_plane_channels; //the size of this vector should be the number of nodes after configured
   std::vector<uint32_t> inter_plane_channel_tracker; //this will have the node from the adjacent plane that is currently connected
+  NodeContainer ground_stations; //node container to hold ground stations
+  std::vector<NetDeviceContainer> ground_station_devices; 
+  std::vector<Ptr<CsmaChannel>> ground_station_channels;
+  std::vector<uint32_t> ground_station_channel_tracker; 
   
 };
   
