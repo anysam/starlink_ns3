@@ -121,15 +121,7 @@ LeoSatelliteMobilityModel::DoSetPosition (const Vector &position)
 
   // Set direction based on which orbital plane satellite belongs to
   uint32_t plane = floor((m_current - 1)/(m_nPerPlane/2));
-  //if (m_longitude <= 0)
-  //{
-    (plane % 2 == 1) ? m_direction = 0: m_direction = 1;
-std::cout<<"LONGITUDE = "<<m_longitude<<", DIRECTION = "<<m_direction<<std::endl;
-  //}
-  //else
-  //{
-  //  (plane % 2 == 1) ? m_direction = 1: m_direction = 0;
-  //}
+  (plane % 2 == 1) ? m_direction = 0: m_direction = 1;
 }
 
 Vector
@@ -158,12 +150,6 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
             longitude = longitude + 180;
           else
             longitude = longitude - 180;
-         /*if (longitude == -180)
-           longitude = 0;
-         else if (longitude == 0)
-           longitude = -180;
-         else
-           longitude = (-1)*longitude;*/
          direction = 0;
 
         if ((latitude - degreeDisplacement) < -90)
@@ -174,12 +160,6 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
             longitude = longitude + 180;
           else
             longitude = longitude - 180;
-          /*if (longitude == -180)
-            longitude = 0;
-          else if (longitude == 0)
-            longitude = -180;
-          else
-            longitude = (-1)*longitude;*/
           direction = 1;
         }
       }
@@ -196,12 +176,6 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
             longitude = longitude + 180;
           else
             longitude = longitude - 180;
-         /*if (longitude == -180)
-           longitude = 0;
-         else if (longitude == 0)
-           longitude = -180;
-         else
-           longitude = (-1)*longitude;*/
          direction = 1;
 
         if ((latitude + degreeDisplacement) > 90)
@@ -212,12 +186,6 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
             longitude = longitude + 180;
           else
             longitude = longitude - 180;
-          /*if (longitude == -180)
-            longitude = 0;
-          else if (longitude == 0)
-            longitude = -180;
-          else
-            longitude = (-1)*longitude;*/
           direction = 0;
         }
       }
@@ -264,30 +232,6 @@ CalculateDistance (const Vector &a, const Vector &b)
   {
     deltaLongitude = (b.y - a.y)*M_PI/180;
   }
-  /*if((b.y == -180 && a.y == -180) || (b.y == 0 && a.y == 0))
-  {
-    deltaLongitude = (a.y - b.y)*M_PI/180;
-  }
-  else if (b.y == -180)
-  {
-    deltaLongitude = std::min(std::abs(b.y - a.y), std::abs(0-a.y))*M_PI/180;
-  }
-  else if (a.y == -180)
-  {
-    deltaLongitude = std::min(std::abs(b.y - a.y), std::abs(b.y - 0))*M_PI/180;
-  }
-  else if (b.y == 0)
-  {
-     deltaLongitude = std::min(std::abs(b.y - a.y), std::abs(180 - a.y))*M_PI/180;
-  }
-  else if (a.y == 0)
-  {
-     deltaLongitude = std::min(std::abs(b.y - a.y), std::abs(b.y - 180))*M_PI/180;
-  }
-  else
-  {
-    deltaLongitude = (a.y - b.y)*M_PI/180;
-  }*/
 
   // Haversine formula
   double y = pow(sin(deltaLatitude/2), 2) + cos(latitude1)*cos(latitude2)*pow(sin(deltaLongitude/2), 2);

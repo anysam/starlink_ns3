@@ -85,8 +85,8 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
        std::cout << Simulator::Now().GetSeconds() << ": plane # "<< i << " node # " <<num_satellites_per_plane - j<< ": x = " << pos.x << ", y = " << pos.y << ", z = " << pos.z << std::endl;
        temp_plane.Add(temp.Get(total_num_satellites/2 + i*num_satellites_per_plane/2 + j - 1));
      }
-     //InternetStackHelper stack;
-     //stack.Install(temp_plane);
+     InternetStackHelper stack;
+     stack.Install(temp_plane);
      this->plane.push_back(temp_plane);
   }
 

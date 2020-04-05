@@ -21,7 +21,7 @@ main (int argc, char *argv[])
   LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
   LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
 
-  LeoSatelliteConfig sat_network(10, 12, 2000);
+  LeoSatelliteConfig sat_network(11, 12, 2000);
   
   UdpEchoServerHelper echoServer (9);
 
