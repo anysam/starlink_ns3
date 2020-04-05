@@ -226,31 +226,41 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
   Ipv4AddressHelper address;
 
   //configuring IP Addresses for IntraPlane devices
-  NetDeviceContainer all_intra_plane_devices;
   address.SetBase ("10.1.0.0", "255.255.0.0");
   for(uint32_t i=0; i< this->intra_plane_devices.size(); i++)
   {
-    all_intra_plane_devices.Add(this->intra_plane_devices[i]);
+    this->intra_plane_interfaces.push_back(address.Assign(this->intra_plane_devices[i]));
   }
-  this->intraplaneInterfaces = address.Assign(all_intra_plane_devices);
   
   //configuring IP Addresses for InterPlane devices
-  NetDeviceContainer all_inter_plane_devices;
   address.SetBase ("10.2.0.0", "255.255.0.0");
   for(uint32_t i=0; i< this->inter_plane_devices.size(); i++)
   {
-    all_inter_plane_devices.Add(this->inter_plane_devices[i]);
+    this->inter_plane_interfaces.push_back(address.Assign(this->inter_plane_devices[i]));
+    for(uint32_t j=1; j<= this->num_satellites_per_plane; j++)
+    {
+      if(j != this->inter_plane_channel_tracker[i] + 1)
+      {
+        std::pair< Ptr< Ipv4 >, uint32_t > interface = this->inter_plane_interfaces[i].Get(j);
+        interface.first->SetDown(interface.second);
+      }
+    }
   }
-  this->interplaneInterfaces = address.Assign(all_inter_plane_devices);
 
   //configuring IP Addresses for Ground devices
-  NetDeviceContainer all_ground_station_devices;
   address.SetBase ("10.3.0.0", "255.255.0.0");
   for(uint32_t i=0; i< this->ground_station_devices.size(); i++)
   {
-    all_ground_station_devices.Add(this->ground_station_devices[i]);
+    this->ground_station_interfaces.push_back(address.Assign(this->ground_station_devices[i]));
+    for(uint32_t j=1; j<= this->num_satellites_per_plane; j++)
+    {
+      if(j != this->ground_station_channel_tracker[i] + 1)
+      {
+        std::pair< Ptr< Ipv4 >, uint32_t > interface = this->ground_station_interfaces[i].Get(j);
+        interface.first->SetDown(interface.second);
+      }
+    }
   }
-  this->groundStationInterfaces = address.Assign(all_ground_station_devices);
 
   //Populate Routing Tables
   std::cout<<"Populating Routing Tables"<<std::endl;
@@ -330,7 +340,11 @@ void LeoSatelliteConfig::UpdateLinks()
       else
       {
         this->inter_plane_channels[access_idx]->Detach(this->inter_plane_devices[access_idx].Get(currAdjNodeID+1)->GetObject<CsmaNetDevice> ());
+        std::pair< Ptr< Ipv4 >, uint32_t> interface = this->inter_plane_interfaces[access_idx].Get(currAdjNodeID+1);
+        interface.first->SetDown(interface.second);
         this->inter_plane_channels[access_idx]->Reattach(this->inter_plane_devices[access_idx].Get(nextAdjNodeID+1)->GetObject<CsmaNetDevice> ());
+        interface = this->inter_plane_interfaces[access_idx].Get(nextAdjNodeID+1);
+        interface.first->SetUp(interface.second);
         this->inter_plane_channel_tracker[access_idx] = nextAdjNodeID;
         double new_delay = (nextAdjNodeDist*1000)/speed_of_light;
         this->inter_plane_channels[access_idx]->SetAttribute("Delay", TimeValue(Seconds(new_delay)));
@@ -372,7 +386,11 @@ void LeoSatelliteConfig::UpdateLinks()
       else
       {
         this->ground_station_channels[i]->Detach(this->ground_station_devices[i].Get(currAdjNodeID+1)->GetObject<CsmaNetDevice> ());
+        std::pair< Ptr< Ipv4 >, uint32_t> interface = this->ground_station_interfaces[i].Get(currAdjNodeID+1);
+        interface.first->SetDown(interface.second);
         this->ground_station_channels[i]->Reattach(this->ground_station_devices[i].Get(closestAdjSat+1)->GetObject<CsmaNetDevice> ());
+        interface = this->ground_station_interfaces[i].Get(closestAdjSat+1);
+        interface.first->SetUp(interface.second);
         this->ground_station_channel_tracker[i] = closestAdjSat;
         double new_delay = (closestAdjSatDist*1000)/speed_of_light;
         this->ground_station_channels[i]->SetAttribute("Delay", TimeValue(Seconds(new_delay)));

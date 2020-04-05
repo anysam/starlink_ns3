@@ -23,6 +23,7 @@
 #include <cmath>
 #include "ns3/internet-module.h"
 #include "ns3/ipv4-global-routing-helper.h"
+#include "ns3/applications-module.h"
 
 namespace ns3 {
 
@@ -43,7 +44,7 @@ public:
   void UpdateLinks (); //update the intersatellite links
 
   NodeContainer ground_stations; //node container to hold ground stations
-  Ipv4InterfaceContainer groundStationInterfaces;
+  //Ipv4InterfaceContainer groundStationInterfaces;
   std::vector<NetDeviceContainer> ground_station_devices; 
   
 //private:
@@ -59,7 +60,10 @@ public:
   //std::vector<NetDeviceContainer> ground_station_devices; 
   std::vector<Ptr<CsmaChannel>> ground_station_channels;
   std::vector<uint32_t> ground_station_channel_tracker;
-  Ipv4InterfaceContainer intraplaneInterfaces, interplaneInterfaces;
+  //Ipv4InterfaceContainer intraplaneInterfaces, interplaneInterfaces;
+  std::vector<Ipv4InterfaceContainer> intra_plane_interfaces;
+  std::vector<Ipv4InterfaceContainer> inter_plane_interfaces;
+  std::vector<Ipv4InterfaceContainer> ground_station_interfaces;
   
 };
   
