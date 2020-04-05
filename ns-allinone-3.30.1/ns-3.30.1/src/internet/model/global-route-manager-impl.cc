@@ -313,7 +313,7 @@ SPFVertex::GetRootExitDirection () const
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_ecmpRootExits.size () <= 1, "Assumed there is at most one exit from the root to this vertex");
+  //NS_ASSERT_MSG (m_ecmpRootExits.size () <= 1, "Assumed there is at most one exit from the root to this vertex");
   return GetRootExitDirection (0);
 }
 

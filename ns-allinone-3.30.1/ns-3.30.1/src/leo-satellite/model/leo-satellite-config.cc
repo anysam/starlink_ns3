@@ -103,6 +103,8 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
          temp_plane.Add(temp.Get(total_num_satellites- i*num_satellites_per_plane/2 + j - 1));
        }
      }
+     InternetStackHelper stack;
+     stack.Install(temp_plane);
      this->plane.push_back(temp_plane);
   }
 
@@ -112,7 +114,7 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
   double distance = CalculateDistance(nodeAPosition, nodeBPosition);
   double delay = (distance * 1000)/speed_of_light; //should get delay in seconds
   PointToPointHelper intraplane_link_helper;
-  intraplane_link_helper.SetDeviceAttribute ("DataRate", StringValue ("5Mbps")); //TODO: update this attribute
+  intraplane_link_helper.SetDeviceAttribute ("DataRate", StringValue ("5.36Gbps"));
   intraplane_link_helper.SetChannelAttribute ("Delay", TimeValue(Seconds (delay)));
 
   std::cout<<"Setting up intra-plane links with distance of "<<distance<<" km and delay of "<<delay<<" seconds."<<std::endl;
@@ -137,7 +139,7 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
       double distance = CalculateDistance(nodeAPos, nodeBPos);
       double delay = (distance*1000)/speed_of_light;
       CsmaHelper interplane_link_helper;
-      interplane_link_helper.SetChannelAttribute("DataRate", StringValue ("5Mbps")); //TODO: update values
+      interplane_link_helper.SetChannelAttribute("DataRate", StringValue ("5.36Gbps"));
       interplane_link_helper.SetChannelAttribute("Delay", TimeValue(Seconds(delay)));
 
       std::cout<<"Channel open between plane "<<i<<" satellite "<<j<<" and plane "<<(i+1)%num_planes<<" satellite "<<j<< " with distance "<<distance<< "km and delay of "<<delay<<" seconds"<<std::endl;
@@ -175,6 +177,9 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
                              "NPerPlane", IntegerValue (num_satellites_per_plane),
                              "NumberofPlanes", IntegerValue (num_planes));
   groundMobility.Install(ground_stations);
+  //Install IP stack
+  InternetStackHelper stack;
+  stack.Install(ground_stations);
   for (int j = 0; j<2; j++)
   {
     Vector temp = ground_stations.Get(j)->GetObject<MobilityModel> ()->GetPosition();
@@ -205,7 +210,7 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
     }
     double delay = (closestAdjSatDist*1000)/speed_of_light;
     CsmaHelper ground_station_link_helper;
-    ground_station_link_helper.SetChannelAttribute("DataRate", StringValue ("5Mbps")); //TODO: update values
+    ground_station_link_helper.SetChannelAttribute("DataRate", StringValue ("5.36Gbps"));
     ground_station_link_helper.SetChannelAttribute("Delay", TimeValue(Seconds(delay)));
 
     std::cout<<"Channel open between ground station " << i << " and plane " << planeIndex << " satellite "<<closestAdjSat<<" with distance "<<closestAdjSatDist<< "km and delay of "<<delay<<" seconds"<<std::endl;
@@ -233,8 +238,40 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
     this->ground_station_channel_tracker.push_back(closestAdjSat);
   }
 
-  //TODO: configure ground stations and channels -- code needs to be reviewed
-  //TODO: set IP addresses
+  //Configure IP Addresses for all NetDevices
+  Ipv4AddressHelper address;
+
+  //configuring IP Addresses for IntraPlane devices
+  NetDeviceContainer all_intra_plane_devices;
+  address.SetBase ("10.1.0.0", "255.255.0.0");
+  for(uint32_t i=0; i< this->intra_plane_devices.size(); i++)
+  {
+    all_intra_plane_devices.Add(this->intra_plane_devices[i]);
+  }
+  this->intraplaneInterfaces = address.Assign(all_intra_plane_devices);
+  
+  //configuring IP Addresses for InterPlane devices
+  NetDeviceContainer all_inter_plane_devices;
+  address.SetBase ("10.2.0.0", "255.255.0.0");
+  for(uint32_t i=0; i< this->inter_plane_devices.size(); i++)
+  {
+    all_inter_plane_devices.Add(this->inter_plane_devices[i]);
+  }
+  this->interplaneInterfaces = address.Assign(all_inter_plane_devices);
+
+  //configuring IP Addresses for Ground devices
+  NetDeviceContainer all_ground_station_devices;
+  address.SetBase ("10.3.0.0", "255.255.0.0");
+  for(uint32_t i=0; i< this->ground_station_devices.size(); i++)
+  {
+    all_ground_station_devices.Add(this->ground_station_devices[i]);
+  }
+  this->groundStationInterfaces = address.Assign(all_ground_station_devices);
+
+  //Populate Routing Tables
+  std::cout<<"Populating Routing Tables"<<std::endl;
+  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+  std::cout<<"Finished Populating Routing Tables"<<std::endl;
 }
 
 void LeoSatelliteConfig::UpdateLinks()
@@ -339,11 +376,17 @@ void LeoSatelliteConfig::UpdateLinks()
         this->ground_station_channels[i]->Detach(this->ground_station_devices[i].Get(currAdjNodeID+1)->GetObject<CsmaNetDevice> ());
         this->ground_station_channels[i]->Reattach(this->ground_station_devices[i].Get(closestAdjSat+1)->GetObject<CsmaNetDevice> ());
         this->ground_station_channel_tracker[i] = closestAdjSat;
-        double new_delay = (closestAdjSat*1000)/speed_of_light;
+        double new_delay = (closestAdjSatDist*1000)/speed_of_light;
         this->ground_station_channels[i]->SetAttribute("Delay", TimeValue(Seconds(new_delay)));
-        std::cout<<"New channel between ground station "<<i<<"and plane "<<planeIndex<<" satellite "<<closestAdjSat<< " with distance "<<closestAdjSatDist<< "km and delay of "<<new_delay<<" seconds"<<std::endl;
+        std::cout<<"New channel between ground station "<<i<<" and plane "<<planeIndex<<" satellite "<<closestAdjSat<< " with distance "<<closestAdjSatDist<< "km and delay of "<<new_delay<<" seconds"<<std::endl;
       }
   }
+  
+  //Recompute Routing Tables
+  //Populate Routing Tables
+  std::cout<<"Recomputing Routing Tables"<<std::endl;
+  Ipv4GlobalRoutingHelper::RecomputeRoutingTables ();
+  std::cout<<"Finished Recomputing Routing Tables"<<std::endl;
 }
 
 }

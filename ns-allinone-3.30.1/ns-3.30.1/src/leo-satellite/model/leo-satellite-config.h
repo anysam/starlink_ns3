@@ -21,6 +21,8 @@
 #include "ns3/mobility-module.h"
 #include "ns3/csma-module.h"
 #include <cmath>
+#include "ns3/internet-module.h"
+#include "ns3/ipv4-global-routing-helper.h"
 
 namespace ns3 {
 
@@ -39,7 +41,12 @@ public:
   virtual TypeId GetInstanceTypeId (void) const;
   
   void UpdateLinks (); //update the intersatellite links
-private:
+
+  NodeContainer ground_stations; //node container to hold ground stations
+  Ipv4InterfaceContainer groundStationInterfaces;
+  std::vector<NetDeviceContainer> ground_station_devices; 
+  
+//private:
   uint32_t num_planes;
   uint32_t num_satellites_per_plane;
   double m_altitude;
@@ -49,10 +56,10 @@ private:
   std::vector<NetDeviceContainer> inter_plane_devices; //the size of this vector should be the number of nodes after configured
   std::vector<Ptr<CsmaChannel>> inter_plane_channels; //the size of this vector should be the number of nodes after configured
   std::vector<uint32_t> inter_plane_channel_tracker; //this will have the node from the adjacent plane that is currently connected
-  NodeContainer ground_stations; //node container to hold ground stations
-  std::vector<NetDeviceContainer> ground_station_devices; 
+  //std::vector<NetDeviceContainer> ground_station_devices; 
   std::vector<Ptr<CsmaChannel>> ground_station_channels;
-  std::vector<uint32_t> ground_station_channel_tracker; 
+  std::vector<uint32_t> ground_station_channel_tracker;
+  Ipv4InterfaceContainer intraplaneInterfaces, interplaneInterfaces;
   
 };
   
