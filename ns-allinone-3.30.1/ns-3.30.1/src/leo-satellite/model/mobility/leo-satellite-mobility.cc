@@ -121,14 +121,15 @@ LeoSatelliteMobilityModel::DoSetPosition (const Vector &position)
 
   // Set direction based on which orbital plane satellite belongs to
   uint32_t plane = floor((m_current - 1)/(m_nPerPlane/2));
-  if (m_longitude <= 0)
-  {
+  //if (m_longitude <= 0)
+  //{
     (plane % 2 == 1) ? m_direction = 0: m_direction = 1;
-  }
-  else
-  {
-    (plane % 2 == 1) ? m_direction = 1: m_direction = 0;
-  }
+std::cout<<"LONGITUDE = "<<m_longitude<<", DIRECTION = "<<m_direction<<std::endl;
+  //}
+  //else
+  //{
+  //  (plane % 2 == 1) ? m_direction = 1: m_direction = 0;
+  //}
 }
 
 Vector
@@ -153,24 +154,32 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
       {
          degreeDisplacement = degreeDisplacement - (90 - latitude); // We've accounted for the degrees taken to get to north pole
          latitude = 90;
-         if (longitude == -180)
+         if (longitude < 0)
+            longitude = longitude + 180;
+          else
+            longitude = longitude - 180;
+         /*if (longitude == -180)
            longitude = 0;
          else if (longitude == 0)
            longitude = -180;
          else
-           longitude = (-1)*longitude;
+           longitude = (-1)*longitude;*/
          direction = 0;
 
         if ((latitude - degreeDisplacement) < -90)
         {
           degreeDisplacement = degreeDisplacement - 180; // We've accounted for the degrees taken to get to south pole
           latitude = -90;
-          if (longitude == -180)
+          if (longitude < 0)
+            longitude = longitude + 180;
+          else
+            longitude = longitude - 180;
+          /*if (longitude == -180)
             longitude = 0;
           else if (longitude == 0)
             longitude = -180;
           else
-            longitude = (-1)*longitude;
+            longitude = (-1)*longitude;*/
           direction = 1;
         }
       }
@@ -183,24 +192,32 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
       {
          degreeDisplacement = degreeDisplacement - (latitude - (-90)); // We've accounted for the degrees taken to get to south pole
          latitude = -90;
-         if (longitude == -180)
+         if (longitude < 0)
+            longitude = longitude + 180;
+          else
+            longitude = longitude - 180;
+         /*if (longitude == -180)
            longitude = 0;
          else if (longitude == 0)
            longitude = -180;
          else
-           longitude = (-1)*longitude;
+           longitude = (-1)*longitude;*/
          direction = 1;
 
         if ((latitude + degreeDisplacement) > 90)
         {
           degreeDisplacement = degreeDisplacement - 180; // We've accounted for the degrees taken to get to north pole
           latitude = 90;
-          if (longitude == -180)
+          if (longitude < 0)
+            longitude = longitude + 180;
+          else
+            longitude = longitude - 180;
+          /*if (longitude == -180)
             longitude = 0;
           else if (longitude == 0)
             longitude = -180;
           else
-            longitude = (-1)*longitude;
+            longitude = (-1)*longitude;*/
           direction = 0;
         }
       }
@@ -235,7 +252,19 @@ CalculateDistance (const Vector &a, const Vector &b)
   double latitude2 = b.x*M_PI/180;
   double deltaLatitude = (b.x - a.x)*M_PI/180;
   double deltaLongitude;
-  if((b.y == -180 && a.y == -180) || (b.y == 0 && a.y == 0))
+  if (b.y == -180 && a.y > 0)
+  {
+    deltaLongitude = (180 - a.y)*M_PI/180;
+  }
+  else if (a.y == -180 && b.y > 0)
+  {
+    deltaLongitude = (b.y - 180)*M_PI/180;
+  }
+  else
+  {
+    deltaLongitude = (b.y - a.y)*M_PI/180;
+  }
+  /*if((b.y == -180 && a.y == -180) || (b.y == 0 && a.y == 0))
   {
     deltaLongitude = (a.y - b.y)*M_PI/180;
   }
@@ -258,7 +287,7 @@ CalculateDistance (const Vector &a, const Vector &b)
   else
   {
     deltaLongitude = (a.y - b.y)*M_PI/180;
-  }
+  }*/
 
   // Haversine formula
   double y = pow(sin(deltaLatitude/2), 2) + cos(latitude1)*cos(latitude2)*pow(sin(deltaLongitude/2), 2);

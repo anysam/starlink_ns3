@@ -73,38 +73,20 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
   for (uint32_t i=0; i<num_planes; i++)
   {
      NodeContainer temp_plane;
-     if (i==0)
+     for(uint32_t j=0; j<num_satellites_per_plane/2; j++)
      {
-       for(uint32_t j=0; j<num_satellites_per_plane/2; j++)
-       {
-         Vector pos = temp.Get(j)->GetObject<MobilityModel> ()->GetPosition();
-         std::cout << Simulator::Now().GetSeconds() << ": plane # "<< i << " node # " <<j<< ": x = " << pos.x << ", y = " << pos.y << ", z = " << pos.z << std::endl;
-         temp_plane.Add(temp.Get(j));
-       }
-       for(uint32_t j=num_satellites_per_plane/2; j> 0; j--)
-       {
-         Vector pos = temp.Get(total_num_satellites/2 + j - 1)->GetObject<MobilityModel> ()->GetPosition();
-         std::cout << Simulator::Now().GetSeconds() << ": plane # "<< i << " node # " <<num_satellites_per_plane - j<< ": x = " << pos.x << ", y = " << pos.y << ", z = " << pos.z << std::endl;
-         temp_plane.Add(temp.Get(total_num_satellites/2 + j - 1));
-       }
+       Vector pos = temp.Get(i*num_satellites_per_plane/2 + j)->GetObject<MobilityModel> ()->GetPosition();
+       std::cout << Simulator::Now().GetSeconds() << ": plane # "<< i << " node # " <<j<< ": x = " << pos.x << ", y = " << pos.y << ", z = " << pos.z << std::endl;
+       temp_plane.Add(temp.Get(i*num_satellites_per_plane/2 + j));
      }
-     else
+     for(uint32_t j=num_satellites_per_plane/2; j> 0; j--)
      {
-       for (uint32_t j=0; j<num_satellites_per_plane/2; j++)
-       {
-         Vector pos = temp.Get(i*num_satellites_per_plane/2 + j)->GetObject<MobilityModel> ()->GetPosition();
-         std::cout << Simulator::Now().GetSeconds() << ": plane # "<< i << " node # " <<j<< ": x = " << pos.x << ", y = " << pos.y << ", z = " << pos.z << std::endl;
-         temp_plane.Add(temp.Get(i*num_satellites_per_plane/2 + j));
-       }
-       for (uint32_t j=num_satellites_per_plane/2; j>0; j--)
-       {
-         Vector pos = temp.Get(total_num_satellites- i*num_satellites_per_plane/2 + j - 1)->GetObject<MobilityModel> ()->GetPosition();
-         std::cout << Simulator::Now().GetSeconds() << ": plane # "<< i << " node # " <<num_satellites_per_plane - j<< ": x = " << pos.x << ", y = " << pos.y << ", z = " << pos.z << std::endl;
-         temp_plane.Add(temp.Get(total_num_satellites- i*num_satellites_per_plane/2 + j - 1));
-       }
+       Vector pos = temp.Get(total_num_satellites/2 + i*num_satellites_per_plane/2 + j - 1)->GetObject<MobilityModel> ()->GetPosition();
+       std::cout << Simulator::Now().GetSeconds() << ": plane # "<< i << " node # " <<num_satellites_per_plane - j<< ": x = " << pos.x << ", y = " << pos.y << ", z = " << pos.z << std::endl;
+       temp_plane.Add(temp.Get(total_num_satellites/2 + i*num_satellites_per_plane/2 + j - 1));
      }
-     InternetStackHelper stack;
-     stack.Install(temp_plane);
+     //InternetStackHelper stack;
+     //stack.Install(temp_plane);
      this->plane.push_back(temp_plane);
   }
 
@@ -134,15 +116,17 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
   {
     for (uint32_t j=0; j<num_satellites_per_plane; j++)
     {
+      uint32_t nodeBIndex;
+      (i == num_planes - 1) ? nodeBIndex = num_satellites_per_plane - j - 1: nodeBIndex = j;
       Vector nodeAPos = this->plane[i].Get(j)->GetObject<MobilityModel>()->GetPosition();
-      Vector nodeBPos = this->plane[(i+1)%num_planes].Get(j)->GetObject<MobilityModel>()->GetPosition();
+      Vector nodeBPos = this->plane[(i+1)%num_planes].Get(nodeBIndex)->GetObject<MobilityModel>()->GetPosition();
       double distance = CalculateDistance(nodeAPos, nodeBPos);
       double delay = (distance*1000)/speed_of_light;
       CsmaHelper interplane_link_helper;
       interplane_link_helper.SetChannelAttribute("DataRate", StringValue ("5.36Gbps"));
       interplane_link_helper.SetChannelAttribute("Delay", TimeValue(Seconds(delay)));
 
-      std::cout<<"Channel open between plane "<<i<<" satellite "<<j<<" and plane "<<(i+1)%num_planes<<" satellite "<<j<< " with distance "<<distance<< "km and delay of "<<delay<<" seconds"<<std::endl;
+      std::cout<<"Channel open between plane "<<i<<" satellite "<<j<<" and plane "<<(i+1)%num_planes<<" satellite "<<nodeBIndex<< " with distance "<<distance<< "km and delay of "<<delay<<" seconds"<<std::endl;
 
       NodeContainer temp_node_container;
       temp_node_container.Add(this->plane[i].Get(j));
@@ -164,7 +148,7 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
         
       this->inter_plane_devices.push_back(temp_netdevice_container);
       this->inter_plane_channels.push_back(csma_channel);
-      this->inter_plane_channel_tracker.push_back(j);
+      this->inter_plane_channel_tracker.push_back(nodeBIndex);
     }
   }
 
@@ -278,6 +262,14 @@ void LeoSatelliteConfig::UpdateLinks()
 {
   std::cout<<std::endl<<std::endl<<std::endl<<"Updating Links"<<std::endl;
 
+  std::vector<NodeContainer> update_links_plane = this->plane;
+  NodeContainer final_plane;
+  for(uint32_t j=0; j<num_satellites_per_plane; j++)
+  {
+    final_plane.Add(this->plane[0].Get(num_satellites_per_plane - j - 1));
+  }
+  update_links_plane.push_back(final_plane);
+ 
   for (uint32_t i=0; i<this->num_planes; i++)
   {
     Vector refSatPos;
@@ -285,7 +277,7 @@ void LeoSatelliteConfig::UpdateLinks()
     //find reference satellite (closest to equator)
     for (uint32_t j=0; j<this->num_satellites_per_plane; j++)
     {
-      Vector pos = this->plane[i].Get(j)->GetObject<MobilityModel>()->GetPosition();
+      Vector pos = update_links_plane[i].Get(j)->GetObject<MobilityModel>()->GetPosition();
       if ((std::abs(pos.x) < std::abs(refSatPos.x)) || j == 0)
       {
         refSatPos = pos;
@@ -296,14 +288,16 @@ void LeoSatelliteConfig::UpdateLinks()
     //find the closest adjacent satellite to the reference satellite
     uint32_t closestAdjSat = 0;
     double closestAdjSatDist = 0;
+    Vector adjPos; //debug
     for (uint32_t j=0; j<this->num_satellites_per_plane; j++)
     {
-      Vector pos = this->plane[(i+1)%num_planes].Get(j)->GetObject<MobilityModel>()->GetPosition();
+      Vector pos = update_links_plane[i+1].Get(j)->GetObject<MobilityModel>()->GetPosition();
       double temp_dist = CalculateDistance(refSatPos,pos);
       if((temp_dist < closestAdjSatDist) || (j==0))
       {
         closestAdjSatDist = temp_dist;
         closestAdjSat = j;
+        adjPos = pos; //debug
       }
     }
 
@@ -319,10 +313,13 @@ void LeoSatelliteConfig::UpdateLinks()
       uint32_t nextAdjNodeID = (j + ref_incr)%(this->num_satellites_per_plane);
       double nextAdjNodeDist;
 
-      Vector constNodePos = this->plane[i].Get(j)->GetObject<MobilityModel>()->GetPosition();
-      Vector nextAdjNodePos = this->plane[(i+1)%(this->num_planes)].Get(nextAdjNodeID)->GetObject<MobilityModel>()->GetPosition();
+      Vector constNodePos = update_links_plane[i].Get(j)->GetObject<MobilityModel>()->GetPosition();
+      Vector nextAdjNodePos = update_links_plane[(i+1)/*%(this->num_planes)*/].Get(nextAdjNodeID)->GetObject<MobilityModel>()->GetPosition();
 
       nextAdjNodeDist = CalculateDistance(constNodePos, nextAdjNodePos);
+
+      if (i == this->num_planes - 1)
+        nextAdjNodeID = num_satellites_per_plane - nextAdjNodeID - 1;
 
       if(currAdjNodeID == nextAdjNodeID)
       {
