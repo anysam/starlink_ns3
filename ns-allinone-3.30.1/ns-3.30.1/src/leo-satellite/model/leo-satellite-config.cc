@@ -224,18 +224,19 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
 
   //Configure IP Addresses for all NetDevices
   Ipv4AddressHelper address;
+  address.SetBase ("10.1.0.0", "255.255.255.0");
 
   //configuring IP Addresses for IntraPlane devices
-  address.SetBase ("10.1.0.0", "255.255.0.0");
   for(uint32_t i=0; i< this->intra_plane_devices.size(); i++)
   {
+    address.NewNetwork();
     this->intra_plane_interfaces.push_back(address.Assign(this->intra_plane_devices[i]));
   }
   
   //configuring IP Addresses for InterPlane devices
-  address.SetBase ("10.2.0.0", "255.255.0.0");
   for(uint32_t i=0; i< this->inter_plane_devices.size(); i++)
   {
+    address.NewNetwork();
     this->inter_plane_interfaces.push_back(address.Assign(this->inter_plane_devices[i]));
     for(uint32_t j=1; j<= this->num_satellites_per_plane; j++)
     {
@@ -248,9 +249,9 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
   }
 
   //configuring IP Addresses for Ground devices
-  address.SetBase ("10.3.0.0", "255.255.0.0");
   for(uint32_t i=0; i< this->ground_station_devices.size(); i++)
   {
+    address.NewNetwork();
     this->ground_station_interfaces.push_back(address.Assign(this->ground_station_devices[i]));
     for(uint32_t j=1; j<= this->num_satellites_per_plane; j++)
     {
