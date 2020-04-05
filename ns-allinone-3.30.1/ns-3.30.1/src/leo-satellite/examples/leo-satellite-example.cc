@@ -16,13 +16,15 @@ main (int argc, char *argv[])
 
   cmd.Parse (argc,argv);
 
-  LeoSatelliteConfig sat_network(10, 12, 2000);
+  LeoSatelliteConfig sat_network(11, 12, 2000);
+  sat_network.UpdateLinks();
+  
+  Simulator::Stop (Seconds (500.0));
+  Simulator::Run ();
+
   sat_network.UpdateLinks();
 
-  /* ... */
-
-  //Simulator::Run ();
-  //Simulator::Destroy ();
+  Simulator::Destroy ();
   return 0; 
 }
 

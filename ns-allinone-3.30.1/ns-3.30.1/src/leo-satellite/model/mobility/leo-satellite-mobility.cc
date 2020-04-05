@@ -120,11 +120,15 @@ LeoSatelliteMobilityModel::DoSetPosition (const Vector &position)
   m_longitude = -180 + 360/(m_numPlanes*2)*floor((m_current - 1)/(m_nPerPlane/2));
 
   // Set direction based on which orbital plane satellite belongs to
-  uint32_t plane = ceil(m_current/(m_numPlanes*2));
-  if (plane % 2 == 1)
-    m_direction = 1;
+  uint32_t plane = floor((m_current - 1)/(m_nPerPlane/2));
+  if (m_longitude <= 0)
+  {
+    (plane % 2 == 1) ? m_direction = 0: m_direction = 1;
+  }
   else
-    m_direction = 0;
+  {
+    (plane % 2 == 1) ? m_direction = 1: m_direction = 0;
+  }
 }
 
 Vector
@@ -139,10 +143,10 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
    double newLatitude;
 
    // How many orbital periods have been completed, then converted to degree displacement
-   double orbitalPeriod = 2*M_PI*radius/m_speed; // [seconds]
+   double orbitalPeriod = 2*M_PI*radius/(m_speed/1000); // [seconds]
    double orbitalPeriodTravelled = (currentTime - m_time)/orbitalPeriod;
-   double degreeDisplacement = fmod(orbitalPeriodTravelled*360, 360);
-   
+   double degreeDisplacement = fmod(orbitalPeriodTravelled*360, 360); 
+
    if (direction == 1)
    {
       if ((latitude + degreeDisplacement) > 90)
@@ -156,20 +160,20 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
          else
            longitude = (-1)*longitude;
          direction = 0;
-      }
-      if ((latitude - degreeDisplacement) < -90)
-      {
-         degreeDisplacement = degreeDisplacement - 180; // We've accounted for the degrees taken to get to south pole
-         latitude = -90;
-         if (longitude == -180)
-           longitude = 0;
-         else if (longitude == 0)
-           longitude = -180;
-         else
-           longitude = (-1)*longitude;
-         direction = 1;
-      }
 
+        if ((latitude - degreeDisplacement) < -90)
+        {
+          degreeDisplacement = degreeDisplacement - 180; // We've accounted for the degrees taken to get to south pole
+          latitude = -90;
+          if (longitude == -180)
+            longitude = 0;
+          else if (longitude == 0)
+            longitude = -180;
+          else
+            longitude = (-1)*longitude;
+          direction = 1;
+        }
+      }
       (direction == 1) ? newLatitude = latitude + degreeDisplacement : newLatitude = latitude - degreeDisplacement;
    }
 
@@ -186,23 +190,23 @@ LeoSatelliteMobilityModel::DoGetPosition (void) const
          else
            longitude = (-1)*longitude;
          direction = 1;
-      }
-      if ((latitude + degreeDisplacement) > 90)
-      {
-         degreeDisplacement = degreeDisplacement - 180; // We've accounted for the degrees taken to get to north pole
-         latitude = 90;
-         if (longitude == -180)
-           longitude = 0;
-         else if (longitude == 0)
-           longitude = -180;
-         else
-           longitude = (-1)*longitude;
-         direction = 0;
-      }
 
+        if ((latitude + degreeDisplacement) > 90)
+        {
+          degreeDisplacement = degreeDisplacement - 180; // We've accounted for the degrees taken to get to north pole
+          latitude = 90;
+          if (longitude == -180)
+            longitude = 0;
+          else if (longitude == 0)
+            longitude = -180;
+          else
+            longitude = (-1)*longitude;
+          direction = 0;
+        }
+      }
       (direction == 1) ? newLatitude = latitude + degreeDisplacement : newLatitude = latitude - degreeDisplacement;
    }
-
+   
    // Update latitude, longitude, direction, and time values for this object
    m_latitude = newLatitude;
    m_longitude = longitude;

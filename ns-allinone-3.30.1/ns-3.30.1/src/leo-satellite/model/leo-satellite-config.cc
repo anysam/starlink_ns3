@@ -233,13 +233,13 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
     this->ground_station_channel_tracker.push_back(closestAdjSat);
   }
 
-  //TODO: configure ground stations and channels -- code needs to be reviewed
   //TODO: set IP addresses
 }
 
 void LeoSatelliteConfig::UpdateLinks()
 {
   std::cout<<std::endl<<std::endl<<std::endl<<"Updating Links"<<std::endl;
+
   for (uint32_t i=0; i<this->num_planes; i++)
   {
     Vector refSatPos;
@@ -341,7 +341,7 @@ void LeoSatelliteConfig::UpdateLinks()
         this->ground_station_channel_tracker[i] = closestAdjSat;
         double new_delay = (closestAdjSat*1000)/speed_of_light;
         this->ground_station_channels[i]->SetAttribute("Delay", TimeValue(Seconds(new_delay)));
-        std::cout<<"New channel between ground station "<<i<<"and plane "<<planeIndex<<" satellite "<<closestAdjSat<< " with distance "<<closestAdjSatDist<< "km and delay of "<<new_delay<<" seconds"<<std::endl;
+        std::cout<<"New channel between ground station "<<i<<" and plane "<<planeIndex<<" satellite "<<closestAdjSat<< " with distance "<<closestAdjSatDist<< "km and delay of "<<new_delay<<" seconds"<<std::endl;
       }
   }
 }

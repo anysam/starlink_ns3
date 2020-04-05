@@ -42,7 +42,7 @@ private:
   friend double CalculateDistance (const Vector &a, const Vector &b);
   uint32_t m_current; // current node
   double m_nPerPlane; // number of satellites per plane -> m_nPerPlane/2 must be even number
-  double m_numPlanes; // number of planes
+  double m_numPlanes; // number of planes -> must be an odd number
   mutable double m_time; // time when current m_latitude, m_longitude, and m_direction were set
   double m_altitude; // [km]
   // The following variables are calculated automatically given the above parameteres
@@ -52,7 +52,7 @@ private:
                       // negative value indicates western longitude, positive value indicates eastern longitude
   mutable bool m_direction; // each adjacent plane will be orbiting in an opposite direction 
                     // 1 = S to N, 0 = N to S
-  double m_speed;
+  double m_speed; // [m/s]
 };
 
 } // namespace ns3
