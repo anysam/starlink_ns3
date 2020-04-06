@@ -21,40 +21,52 @@ main (int argc, char *argv[])
   LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
   LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
 
-  LeoSatelliteConfig sat_network(11, 12, 2000);
+  LeoSatelliteConfig sat_network(9, 4, 2000);
   
   UdpEchoServerHelper echoServer (9);
 
   ApplicationContainer serverApps = echoServer.Install(sat_network.ground_stations.Get(1));
   serverApps.Start (Seconds (1.0));
-  serverApps.Stop (Seconds (10.0));
+  serverApps.Stop (Seconds (2000.0));
 
   UdpEchoClientHelper echoClient (sat_network.ground_station_interfaces[1].GetAddress(0), 9);
-  echoClient.SetAttribute("MaxPackets", UintegerValue (1));
-  echoClient.SetAttribute("Interval", TimeValue(Seconds(1.0)));
+  echoClient.SetAttribute("MaxPackets", UintegerValue (20));
+  echoClient.SetAttribute("Interval", TimeValue(Seconds(100.0)));
   echoClient.SetAttribute("PacketSize", UintegerValue (1024));
 
   ApplicationContainer clientApps = echoClient.Install (sat_network.ground_stations.Get(0));
   clientApps.Start (Seconds (2.0));
-  clientApps.Stop (Seconds (10.0));
+  clientApps.Stop (Seconds (2000.0));
 
-  //PointToPointHelper p2p;
-  //p2p.EnablePcap("intra", sat_network.intra_plane_devices[0].Get(1), true);
+  for(uint32_t i=0; i<19; i++)
+  {
+    Simulator::Stop(Seconds(100));
+    Simulator::Run();
+    sat_network.UpdateLinks();
+  }
 
-  Ipv4GlobalRoutingHelper routes;
-  Ptr<OutputStreamWrapper> routingStream = Create<OutputStreamWrapper> (&std::cout);
+  Simulator::Stop(Seconds(100));
+  Simulator::Run();
 
-  routes.PrintRoutingTableAt(Seconds(0), sat_network.ground_stations.Get(0), routingStream);
+
+  /*PointToPointHelper p2p;
+  p2p.EnablePcapAll("intra");
+  CsmaHelper csma;
+  csma.EnablePcapAll("csma");*/
+
+  //Ipv4GlobalRoutingHelper routes;
+  //Ptr<OutputStreamWrapper> routingStream = Create<OutputStreamWrapper> (&std::cout);
+
+  //routes.PrintRoutingTableAt(Seconds(0), sat_network.plane[0].Get(2), routingStream);
+  //routes.PrintRoutingTableAllAt(Seconds(0), routingStream);
   //routes.PrintRoutingTableAt(Seconds(6), sat_network.plane[0].Get(0), routingStream);
   //Simulator::Stop(Seconds(5));
-  Simulator::Run();
+  //Simulator::Run();
   //sat_network.UpdateLinks();
-  CsmaHelper csma;
-  //csma.EnablePcapAll ("ground");
-  csma.EnablePcap("ground", sat_network.ground_station_devices[0].Get(0), true);
+  //csma.EnablePcap("ground", sat_network.ground_station_devices[0].Get(0), true);
 
   //Simulator::Stop(Seconds(10));
-  Simulator:: Run ();
+  //Simulator:: Run ();
   //sat_network.UpdateLinks();
 
   //Simulator::Run ();

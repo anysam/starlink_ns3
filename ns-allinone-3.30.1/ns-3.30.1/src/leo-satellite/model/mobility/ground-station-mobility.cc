@@ -70,13 +70,13 @@ GroundStationMobilityModel::DoSetPosition (const Vector &position)
   current++;
   if (current == 1) // first ground station
   {
-    m_latitude = 90 - 180/(m_nPerPlane/2)/2*(m_nPerPlane/4);
+    m_latitude = 90 - 180/(m_nPerPlane/2)/2 ;
     m_longitude = -180;
   }
   else // second ground station
   {
     m_latitude = 90 - 180/(m_nPerPlane/2)/2 - 180/(m_nPerPlane/2)*(m_nPerPlane/4);
-    m_longitude = -180 + 360/(m_numPlanes*2)*floor(5*m_nPerPlane/7);
+    m_longitude = -180 + 360/(m_numPlanes*2)*floor(3*m_numPlanes/7);
   }
 }
 
