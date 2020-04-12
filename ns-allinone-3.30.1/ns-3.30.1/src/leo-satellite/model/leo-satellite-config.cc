@@ -269,7 +269,7 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
   std::cout<<"Finished Populating Routing Tables"<<std::endl;
 
   // Set up packet sniffing for entire network
-  CsmaHelper csma;
+  /*CsmaHelper csma;
   for (uint32_t i=0; i< this->inter_plane_devices.size(); i++)
   {
     csma.EnablePcap("inter-sniff", this->inter_plane_devices[i].Get(1), true);
@@ -282,7 +282,7 @@ LeoSatelliteConfig::LeoSatelliteConfig (uint32_t num_planes, uint32_t num_satell
   for(uint32_t i=0; i< this->ground_station_devices.size(); i++)
   {
     p2p.EnablePcap("ground-sniff", this->ground_station_devices[i].Get(1), true);
-  }
+  }*/
 }
 
 void LeoSatelliteConfig::UpdateLinks()

@@ -3,6 +3,9 @@
 #include "ns3/core-module.h"
 #include "ns3/leo-satellite-config.h"
 #include "ns3/applications-module.h"
+#include "ns3/flow-monitor-helper.h"
+#include <string>
+#include <sstream>
 
 using namespace ns3;
 
@@ -11,17 +14,21 @@ NS_LOG_COMPONENT_DEFINE("LeoSatelliteExample");
 int 
 main (int argc, char *argv[])
 {
-  //bool verbose = true;
+  uint32_t n_planes = 3;
+  uint32_t n_sats_per_plane = 4;
+  double altitude = 2000;
 
   CommandLine cmd;
-  //cmd.AddValue ("verbose", "Tell application to log if true", verbose);
+  cmd.AddValue ("n_planes", "Number of planes in satellite constellation", n_planes);
+  cmd.AddValue ("n_sats_per_plane", "Number of satellites per plane in the satellite constellation", n_sats_per_plane);
+  cmd.AddValue ("altitude", "Altitude of satellites in constellation in kilometers ... must be between 500 and 2000", altitude);
 
   cmd.Parse (argc,argv);
 
   LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
   LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
 
-  LeoSatelliteConfig sat_network(9, 4, 2000);
+  LeoSatelliteConfig sat_network(n_planes, n_sats_per_plane, altitude);
   
   UdpEchoServerHelper echoServer (9);
 
@@ -38,21 +45,17 @@ main (int argc, char *argv[])
   clientApps.Start (Seconds (2.0));
   clientApps.Stop (Seconds (2000.0));
 
+  FlowMonitorHelper flowmonHelper;
+  flowmonHelper.InstallAll();
+
   for(uint32_t i=0; i<19; i++)
   {
     Simulator::Stop(Seconds(100));
     Simulator::Run();
     sat_network.UpdateLinks();
   }
-
   Simulator::Stop(Seconds(100));
   Simulator::Run();
-
-
-  /*PointToPointHelper p2p;
-  p2p.EnablePcapAll("intra");
-  CsmaHelper csma;
-  csma.EnablePcapAll("csma");*/
 
   //Ipv4GlobalRoutingHelper routes;
   //Ptr<OutputStreamWrapper> routingStream = Create<OutputStreamWrapper> (&std::cout);
@@ -60,18 +63,15 @@ main (int argc, char *argv[])
   //routes.PrintRoutingTableAt(Seconds(0), sat_network.plane[0].Get(2), routingStream);
   //routes.PrintRoutingTableAllAt(Seconds(0), routingStream);
   //routes.PrintRoutingTableAt(Seconds(6), sat_network.plane[0].Get(0), routingStream);
-  //Simulator::Stop(Seconds(5));
-  //Simulator::Run();
-  //sat_network.UpdateLinks();
-  //csma.EnablePcap("ground", sat_network.ground_station_devices[0].Get(0), true);
-
-  //Simulator::Stop(Seconds(10));
-  //Simulator:: Run ();
-  //sat_network.UpdateLinks();
-
-  //Simulator::Run ();
-
+ 
   Simulator::Destroy ();
+
+  std::stringstream ss;
+  std::string file_title;
+  ss << "leo-satellite-example-"<<n_planes<<"-"<<n_sats_per_plane<<"-"<<altitude<<".flowmon";
+  ss >> file_title;
+
+  flowmonHelper.SerializeToXmlFile (file_title, false, false);
   return 0; 
 }
 
