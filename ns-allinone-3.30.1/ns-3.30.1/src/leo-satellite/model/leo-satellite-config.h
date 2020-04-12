@@ -44,26 +44,23 @@ public:
   void UpdateLinks (); //update the intersatellite links
 
   NodeContainer ground_stations; //node container to hold ground stations
-  //Ipv4InterfaceContainer groundStationInterfaces;
-  std::vector<NetDeviceContainer> ground_station_devices; 
-  
-//private:
+  std::vector<Ipv4InterfaceContainer> ground_station_interfaces;
+
+private:
   uint32_t num_planes;
   uint32_t num_satellites_per_plane;
   double m_altitude;
 
   std::vector<NodeContainer> plane; //node container for each plane
   std::vector<NetDeviceContainer> intra_plane_devices; //contains net devices for all P2P links for all planes
-  std::vector<NetDeviceContainer> inter_plane_devices; //the size of this vector should be the number of nodes after configured
-  std::vector<Ptr<CsmaChannel>> inter_plane_channels; //the size of this vector should be the number of nodes after configured
+  std::vector<NetDeviceContainer> inter_plane_devices;
+  std::vector<Ptr<CsmaChannel>> inter_plane_channels;
   std::vector<uint32_t> inter_plane_channel_tracker; //this will have the node from the adjacent plane that is currently connected
-  //std::vector<NetDeviceContainer> ground_station_devices; 
+  std::vector<NetDeviceContainer> ground_station_devices; 
   std::vector<Ptr<CsmaChannel>> ground_station_channels;
   std::vector<uint32_t> ground_station_channel_tracker;
-  //Ipv4InterfaceContainer intraplaneInterfaces, interplaneInterfaces;
   std::vector<Ipv4InterfaceContainer> intra_plane_interfaces;
   std::vector<Ipv4InterfaceContainer> inter_plane_interfaces;
-  std::vector<Ipv4InterfaceContainer> ground_station_interfaces;
   
 };
   

@@ -1,4 +1,12 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/*
+ * LEO Satellite Example
+ * Runs traffic through a configurable LEO satellite constellation
+ *
+ * ENSC 427: Communication Networks
+ * Spring 2020
+ * Team 11
+ */
 
 #include "ns3/core-module.h"
 #include "ns3/leo-satellite-config.h"
@@ -56,13 +64,6 @@ main (int argc, char *argv[])
   }
   Simulator::Stop(Seconds(100));
   Simulator::Run();
-
-  //Ipv4GlobalRoutingHelper routes;
-  //Ptr<OutputStreamWrapper> routingStream = Create<OutputStreamWrapper> (&std::cout);
-
-  //routes.PrintRoutingTableAt(Seconds(0), sat_network.plane[0].Get(2), routingStream);
-  //routes.PrintRoutingTableAllAt(Seconds(0), routingStream);
-  //routes.PrintRoutingTableAt(Seconds(6), sat_network.plane[0].Get(0), routingStream);
  
   Simulator::Destroy ();
 

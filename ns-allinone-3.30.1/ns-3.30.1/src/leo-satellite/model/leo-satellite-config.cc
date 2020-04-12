@@ -416,7 +416,6 @@ void LeoSatelliteConfig::UpdateLinks()
   }
   
   //Recompute Routing Tables
-  //Populate Routing Tables
   std::cout<<"Recomputing Routing Tables"<<std::endl;
   Ipv4GlobalRoutingHelper::RecomputeRoutingTables ();
   std::cout<<"Finished Recomputing Routing Tables"<<std::endl;
